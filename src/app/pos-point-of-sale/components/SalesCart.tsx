@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useRef, useEffect } from 'react';
-import { Trash2, Plus, Minus, ShoppingCart, UserPlus, Percent, X, Phone, Search, Loader2, CheckCircle } from 'lucide-react';
+import { Trash2, Plus, Minus, ShoppingCart, UserPlus, Percent, X, Phone, Search, Loader2, CheckCircle, Tag } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import type { CartItem } from './POSLayout';
 
@@ -22,6 +22,7 @@ interface Props {
   onDiscountChange: (v: number) => void;
   onCustomerChange: (v: string) => void;
   onUpdateQuantity: (productId: string, qty: number) => void;
+  onUpdateItemPrice: (productId: string, price: number) => void;
   onRemoveItem: (productId: string) => void;
   onCheckout: () => void;
   onClear: () => void;
@@ -176,7 +177,7 @@ function AddClientModal({
 export default function SalesCart({
   cart, discount, subtotal, discountAmount, total,
   selectedCustomer, onDiscountChange, onCustomerChange,
-  onUpdateQuantity, onRemoveItem, onCheckout, onClear,
+  onUpdateQuantity, onUpdateItemPrice, onRemoveItem, onCheckout, onClear,
 }: Props) {
   const supabase = createClient();
   const [phoneQuery, setPhoneQuery] = useState('');
@@ -184,6 +185,8 @@ export default function SalesCart({
   const [foundCustomer, setFoundCustomer] = useState<CustomerInfo | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [discountInput, setDiscountInput] = useState(discount.toString());
+  const [editingPriceId, setEditingPriceId] = useState<string | null>(null);
+  const [priceInputValue, setPriceInputValue] = useState('');
   const searchTimeout = useRef<NodeJS.Timeout | null>(null);
 
   // Mock customers for fallback
@@ -273,6 +276,28 @@ export default function SalesCart({
     } else {
       setDiscountInput(discount.toString());
     }
+  };
+
+  const handlePriceEdit = (item: CartItem) => {
+    setEditingPriceId(item.productId);
+    setPriceInputValue(item.price.toString());
+  };
+
+  const handlePriceBlur = (item: CartItem) => {
+    const val = parseInt(priceInputValue, 10);
+    if (!isNaN(val) && val >= item.minPrice) {
+      onUpdateItemPrice(item.productId, val);
+    } else if (!isNaN(val) && val < item.minPrice) {
+      onUpdateItemPrice(item.productId, item.minPrice);
+    } else {
+      // revert
+    }
+    setEditingPriceId(null);
+  };
+
+  const handlePriceKeyDown = (e: React.KeyboardEvent, item: CartItem) => {
+    if (e.key === 'Enter') handlePriceBlur(item);
+    if (e.key === 'Escape') setEditingPriceId(null);
   };
 
   const selectedCustId = selectedCustomer;
@@ -400,9 +425,46 @@ export default function SalesCart({
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-semibold text-slate-800 leading-tight truncate">{item.name}</p>
-                    <p className="text-xs text-amber-600 font-bold tabular-nums mt-0.5">
-                      {(item.price / 1000).toFixed(0)}K GNF
+
+                    {/* Editable unit price */}
+                    <div className="flex items-center gap-1.5 mt-1">
+                      {editingPriceId === item.productId ? (
+                        <div className="flex items-center gap-1 bg-white border border-amber-400 rounded-md px-2 py-0.5">
+                          <input
+                            type="number"
+                            autoFocus
+                            value={priceInputValue}
+                            onChange={e => setPriceInputValue(e.target.value)}
+                            onBlur={() => handlePriceBlur(item)}
+                            onKeyDown={e => handlePriceKeyDown(e, item)}
+                            className="w-24 text-xs font-bold text-amber-700 bg-transparent outline-none tabular-nums"
+                          />
+                          <span className="text-xs text-slate-400">GNF</span>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => handlePriceEdit(item)}
+                          className="flex items-center gap-1 group/price"
+                          title="Modifier le prix unitaire"
+                        >
+                          <Tag size={10} className="text-amber-400 group-hover/price:text-amber-600 transition-colors" />
+                          <span className={`text-xs font-bold tabular-nums transition-colors ${item.price < item.originalPrice ? 'text-green-600' : 'text-amber-600'} group-hover/price:underline`}>
+                            {(item.price / 1000).toFixed(0)}K GNF
+                          </span>
+                        </button>
+                      )}
+                      {item.price !== item.originalPrice && (
+                        <span className="text-xs text-slate-400 line-through tabular-nums">
+                          {(item.originalPrice / 1000).toFixed(0)}K
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Min price reference */}
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      <span className="text-red-400 font-semibold">Min: {(item.minPrice / 1000).toFixed(0)}K GNF</span>
                     </p>
+
                     <div className="flex items-center gap-2 mt-1.5">
                       <button
                         onClick={() => onUpdateQuantity(item.productId, item.quantity - 1)}

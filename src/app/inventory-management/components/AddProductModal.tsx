@@ -11,6 +11,8 @@ interface Product {
   model: string;
   purchasePrice: number;
   salePrice: number;
+  minDiscountPrice: number;
+  maxDiscountPrice: number;
   stock: number;
   threshold: number;
   supplier: string;
@@ -26,6 +28,8 @@ interface FormData {
   model: string;
   purchasePrice: number;
   salePrice: number;
+  minDiscountPrice: number;
+  maxDiscountPrice: number;
   stock: number;
   threshold: number;
   supplier: string;
@@ -265,6 +269,64 @@ export default function AddProductModal({ onClose, onAdd }: Props) {
                     parseFloat(margin) >= 0 ? 'bg-amber-50 border-amber-200 text-amber-700': 'bg-red-50 border-red-200 text-red-700'
                   }`}>
                     {margin !== '—' ? `+${margin}%` : '—'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Discount price range */}
+              <div className="mt-4 p-4 bg-blue-50 border border-blue-100 rounded-xl">
+                <p className="text-xs font-semibold text-blue-700 uppercase tracking-widest mb-3">Fourchette de remise autorisée</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-1">
+                      Prix remise minimum <span className="text-red-500">*</span>
+                    </label>
+                    <p className="text-xs text-slate-400 mb-1.5">Prix plancher — remise maximale accordée</p>
+                    <div className="flex items-center border border-slate-200 focus-within:border-blue-400 rounded-lg overflow-hidden transition-colors bg-white">
+                      <input
+                        type="number"
+                        min={0}
+                        placeholder="0"
+                        {...register('minDiscountPrice', {
+                          required: 'Prix remise minimum requis',
+                          min: { value: 1, message: 'Doit être supérieur à 0' },
+                          valueAsNumber: true,
+                        })}
+                        className="flex-1 px-3 py-2.5 text-sm outline-none bg-white tabular-nums"
+                      />
+                      <span className="px-3 py-2.5 bg-slate-50 text-xs text-slate-500 font-semibold border-l border-slate-200">GNF</span>
+                    </div>
+                    {errors.minDiscountPrice && (
+                      <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
+                        <AlertCircle size={11} /> {errors.minDiscountPrice.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-1">
+                      Prix remise maximum <span className="text-red-500">*</span>
+                    </label>
+                    <p className="text-xs text-slate-400 mb-1.5">Prix plafond — remise minimale accordée</p>
+                    <div className="flex items-center border border-slate-200 focus-within:border-blue-400 rounded-lg overflow-hidden transition-colors bg-white">
+                      <input
+                        type="number"
+                        min={0}
+                        placeholder="0"
+                        {...register('maxDiscountPrice', {
+                          required: 'Prix remise maximum requis',
+                          min: { value: 1, message: 'Doit être supérieur à 0' },
+                          valueAsNumber: true,
+                        })}
+                        className="flex-1 px-3 py-2.5 text-sm outline-none bg-white tabular-nums"
+                      />
+                      <span className="px-3 py-2.5 bg-slate-50 text-xs text-slate-500 font-semibold border-l border-slate-200">GNF</span>
+                    </div>
+                    {errors.maxDiscountPrice && (
+                      <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
+                        <AlertCircle size={11} /> {errors.maxDiscountPrice.message}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>

@@ -1,3 +1,4 @@
+'use client';
 import React from 'react';
 import AppLayout from '@/components/AppLayout';
 import Topbar from '@/components/Topbar';
@@ -10,7 +11,7 @@ export default function POSPage() {
         title="Point de Vente"
         subtitle="Caisse principale — Boutique Conakry"
       />
-      <div className="h-[calc(100vh-56px)] overflow-hidden">
+      <div className="h-[calc(100vh-56px)] flex flex-col">
         <POSLayout />
       </div>
     </AppLayout>

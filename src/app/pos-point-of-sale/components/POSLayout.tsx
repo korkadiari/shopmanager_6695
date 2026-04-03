@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import ProductCatalog from './ProductCatalog';
 import SalesCart from './SalesCart';
 import PaymentModal from './PaymentModal';
@@ -11,6 +11,8 @@ export interface CartItem {
   productId: string;
   name: string;
   price: number;
+  originalPrice: number;
+  minPrice: number;
   quantity: number;
   maxStock: number;
   category: string;
@@ -42,7 +44,7 @@ export default function POSLayout() {
   const total = subtotal - discountAmount;
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
-  const addToCart = (product: { id: string; name: string; price: number; stock: number; category: string }) => {
+  const addToCart = useCallback((product: { id: string; name: string; price: number; stock: number; category: string; minPrice?: number }) => {
     setCart((prev) => {
       const existing = prev.find((i) => i.productId === product.id);
       if (existing) {
@@ -51,6 +53,7 @@ export default function POSLayout() {
           i.productId === product.id ? { ...i, quantity: i.quantity + 1 } : i
         );
       }
+      const minP = product.minPrice ?? Math.round(product.price * 0.85);
       return [
         ...prev,
         {
@@ -58,15 +61,17 @@ export default function POSLayout() {
           productId: product.id,
           name: product.name,
           price: product.price,
+          originalPrice: product.price,
+          minPrice: minP,
           quantity: 1,
           maxStock: product.stock,
           category: product.category,
         },
       ];
     });
-  };
+  }, []);
 
-  const updateQuantity = (productId: string, qty: number) => {
+  const updateQuantity = useCallback((productId: string, qty: number) => {
     if (qty <= 0) {
       setCart((prev) => prev.filter((i) => i.productId !== productId));
     } else {
@@ -74,11 +79,17 @@ export default function POSLayout() {
         prev.map((i) => (i.productId === productId ? { ...i, quantity: Math.min(qty, i.maxStock) } : i))
       );
     }
-  };
+  }, []);
 
-  const removeFromCart = (productId: string) => {
+  const updateItemPrice = useCallback((productId: string, newPrice: number) => {
+    setCart((prev) =>
+      prev.map((i) => (i.productId === productId ? { ...i, price: newPrice } : i))
+    );
+  }, []);
+
+  const removeFromCart = useCallback((productId: string) => {
     setCart((prev) => prev.filter((i) => i.productId !== productId));
-  };
+  }, []);
 
   const handlePaymentComplete = (invoice: GeneratedInvoice) => {
     setGeneratedInvoice(invoice);
@@ -108,6 +119,7 @@ export default function POSLayout() {
           onDiscountChange={setDiscount}
           onCustomerChange={setSelectedCustomer}
           onUpdateQuantity={updateQuantity}
+          onUpdateItemPrice={updateItemPrice}
           onRemoveItem={removeFromCart}
           onCheckout={() => setShowPaymentModal(true)}
           onClear={() => setCart([])}
@@ -162,6 +174,7 @@ export default function POSLayout() {
                 onDiscountChange={setDiscount}
                 onCustomerChange={setSelectedCustomer}
                 onUpdateQuantity={updateQuantity}
+                onUpdateItemPrice={updateItemPrice}
                 onRemoveItem={removeFromCart}
                 onCheckout={() => {
                   setShowMobileCart(false);
