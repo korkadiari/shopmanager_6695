@@ -260,7 +260,13 @@ export default function ProductCatalog({ onAddToCart, cartItems }: Props) {
                   key={product.id}
                   type="button"
                   disabled={isOutOfStock}
-                  onClick={() => onAddToCart(product)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (!isOutOfStock) {
+                      onAddToCart(product);
+                    }
+                  }}
                   className={`
                     relative bg-white rounded-xl border p-3 transition-all duration-150 group text-left w-full
                     ${isOutOfStock

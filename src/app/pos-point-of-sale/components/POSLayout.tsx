@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import ProductCatalog from './ProductCatalog';
 import SalesCart from './SalesCart';
 import PaymentModal from './PaymentModal';
@@ -42,7 +42,7 @@ export default function POSLayout() {
   const total = subtotal - discountAmount;
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
-  const addToCart = (product: { id: string; name: string; price: number; stock: number; category: string }) => {
+  const addToCart = useCallback((product: { id: string; name: string; price: number; stock: number; category: string }) => {
     setCart((prev) => {
       const existing = prev.find((i) => i.productId === product.id);
       if (existing) {
@@ -64,9 +64,9 @@ export default function POSLayout() {
         },
       ];
     });
-  };
+  }, []);
 
-  const updateQuantity = (productId: string, qty: number) => {
+  const updateQuantity = useCallback((productId: string, qty: number) => {
     if (qty <= 0) {
       setCart((prev) => prev.filter((i) => i.productId !== productId));
     } else {
@@ -74,11 +74,11 @@ export default function POSLayout() {
         prev.map((i) => (i.productId === productId ? { ...i, quantity: Math.min(qty, i.maxStock) } : i))
       );
     }
-  };
+  }, []);
 
-  const removeFromCart = (productId: string) => {
+  const removeFromCart = useCallback((productId: string) => {
     setCart((prev) => prev.filter((i) => i.productId !== productId));
-  };
+  }, []);
 
   const handlePaymentComplete = (invoice: GeneratedInvoice) => {
     setGeneratedInvoice(invoice);
