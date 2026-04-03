@@ -256,13 +256,15 @@ export default function ProductCatalog({ onAddToCart, cartItems }: Props) {
               const isLowStock = product.stock > 0 && product.stock <= 5;
 
               return (
-                <div
+                <button
                   key={product.id}
-                  onClick={() => !isOutOfStock && onAddToCart(product)}
+                  type="button"
+                  disabled={isOutOfStock}
+                  onClick={() => onAddToCart(product)}
                   className={`
-                    relative bg-white rounded-xl border p-3 transition-all duration-150 group
+                    relative bg-white rounded-xl border p-3 transition-all duration-150 group text-left w-full
                     ${isOutOfStock
-                      ? 'border-slate-200 opacity-60 cursor-not-allowed' :'border-slate-200 hover:border-amber-400 hover:shadow-card-md cursor-pointer active:scale-95'
+                      ? 'border-slate-200 opacity-60 cursor-not-allowed' :'border-slate-200 hover:border-amber-400 hover:shadow-md cursor-pointer active:scale-95'
                     }
                     ${cartQty > 0 ? 'border-amber-400 bg-amber-50' : ''}
                   `}
@@ -301,11 +303,11 @@ export default function ProductCatalog({ onAddToCart, cartItems }: Props) {
                   </div>
 
                   {!isOutOfStock && (
-                    <div className="absolute bottom-2 right-2 w-6 h-6 bg-amber-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-sm">
+                    <div className="absolute bottom-2 right-2 w-6 h-6 bg-amber-500 rounded-full flex items-center justify-center shadow-sm">
                       <Plus size={13} className="text-white" />
                     </div>
                   )}
-                </div>
+                </button>
               );
             })}
           </div>
